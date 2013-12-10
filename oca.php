@@ -5,6 +5,37 @@ class Oca
 	protected $webservice_url = 'webservice.oca.com.ar';
 	
 	// =========================================================================
+
+	public function List_Envios($cuit = NULL,$FechaDesde = NULL, $FechaHasta = NULL)
+	{
+		if ( ! $cuit) return;
+		
+		$ch = curl_init();
+		
+		curl_setopt_array($ch,	array(	CURLOPT_RETURNTRANSFER	=> TRUE,
+										CURLOPT_HEADER			=> FALSE,
+										CURLOPT_CONNECTTIMEOUT	=> 5,
+										CURLOPT_POST			=> TRUE,
+										CURLOPT_POSTFIELDS		=> 'CUIT='.$cuit.'&FechaDesde='.$FechaDesde.'&FechaHasta='.$FechaHasta,
+										CURLOPT_URL				=> "{$this->webservice_url}/oep_tracking/Oep_Track.asmx/List_Envios",
+										CURLOPT_FOLLOWLOCATION	=> TRUE));
+
+		$dom = new DOMDocument();
+		@$dom->loadXML(curl_exec($ch));
+		$xpath = new DOMXpath($dom);
+	
+		$c_imp = array();
+		foreach (@$xpath->query("//NewDataSet/Table") as $ci)
+		{
+			$c_imp[] = array(	'NroProducto'	=> $ci->getElementsByTagName('NroProducto')->item(0)->nodeValue,
+								'NumeroEnvio'			=> $ci->getElementsByTagName('NumeroEnvio')->item(0)->nodeValue
+							);
+		}
+		
+		return $c_imp;
+	}
+
+	// =========================================================================
 	
 	/**
 	 * Devuelve todos los Centros de Imposición existentes cercanos al CP
@@ -91,4 +122,5 @@ class Oca
 		
 		return $c_imp;
 	}
+
 }
